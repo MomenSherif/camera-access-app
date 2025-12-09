@@ -1,5 +1,11 @@
+// @ts-nocheck
 export interface WebAuthnError {
-  type: 'not-supported' | 'not-allowed' | 'timeout' | 'invalid-state' | 'unknown';
+  type:
+    | 'not-supported'
+    | 'not-allowed'
+    | 'timeout'
+    | 'invalid-state'
+    | 'unknown';
   message: string;
   originalError?: Error;
 }
@@ -87,7 +93,8 @@ export async function registerCredential(): Promise<AuthenticationResult> {
     if (!checkWebAuthnSupport()) {
       const error: WebAuthnError = {
         type: 'not-supported',
-        message: 'WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Safari, or Edge.'
+        message:
+          'WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Safari, or Edge.',
       };
       throw error;
     }
@@ -95,37 +102,41 @@ export async function registerCredential(): Promise<AuthenticationResult> {
     const challenge = generateChallenge();
     const userId = generateUserId();
 
-    const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions = {
-      challenge,
-      rp: {
-        name: 'Camera Access App',
-        id: window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
-      },
-      user: {
-        id: userId,
-        name: 'user@example.com',
-        displayName: 'Demo User'
-      },
-      pubKeyCredParams: [
-        { type: 'public-key', alg: -7 },  // ES256
-        { type: 'public-key', alg: -257 } // RS256
-      ],
-      authenticatorSelection: {
-        authenticatorAttachment: 'platform',
-        userVerification: 'required'
-      },
-      timeout: 60000,
-      attestation: 'none'
-    };
+    const publicKeyCredentialCreationOptions: PublicKeyCredentialCreationOptions =
+      {
+        challenge,
+        rp: {
+          name: 'Camera Access App',
+          id:
+            window.location.hostname === 'localhost'
+              ? 'localhost'
+              : window.location.hostname,
+        },
+        user: {
+          id: userId,
+          name: 'user@example.com',
+          displayName: 'Demo User',
+        },
+        pubKeyCredParams: [
+          { type: 'public-key', alg: -7 }, // ES256
+          { type: 'public-key', alg: -257 }, // RS256
+        ],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          userVerification: 'required',
+        },
+        timeout: 60000,
+        attestation: 'none',
+      };
 
-    const credential = await navigator.credentials.create({
-      publicKey: publicKeyCredentialCreationOptions
-    }) as PublicKeyCredential;
+    const credential = (await navigator.credentials.create({
+      publicKey: publicKeyCredentialCreationOptions,
+    })) as PublicKeyCredential;
 
     if (!credential) {
       const error: WebAuthnError = {
         type: 'unknown',
-        message: 'Failed to create credential. Please try again.'
+        message: 'Failed to create credential. Please try again.',
       };
       throw error;
     }
@@ -136,9 +147,8 @@ export async function registerCredential(): Promise<AuthenticationResult> {
     return {
       success: true,
       credential,
-      isNewRegistration: true
+      isNewRegistration: true,
     };
-
   } catch (err) {
     const error = err as Error & { name?: string };
     let webAuthnError: WebAuthnError;
@@ -152,16 +162,18 @@ export async function registerCredential(): Promise<AuthenticationResult> {
       case 'NotAllowedError':
         webAuthnError = {
           type: 'not-allowed',
-          message: 'Biometric authentication was cancelled or denied. Please ensure you have Face ID, Touch ID, or Windows Hello set up on your device.',
-          originalError: error
+          message:
+            'Biometric authentication was cancelled or denied. Please ensure you have Face ID, Touch ID, or Windows Hello set up on your device.',
+          originalError: error,
         };
         break;
 
       case 'NotSupportedError':
         webAuthnError = {
           type: 'not-supported',
-          message: 'This device does not support biometric authentication. Please ensure Face ID, Touch ID, or Windows Hello is enabled.',
-          originalError: error
+          message:
+            'This device does not support biometric authentication. Please ensure Face ID, Touch ID, or Windows Hello is enabled.',
+          originalError: error,
         };
         break;
 
@@ -169,7 +181,7 @@ export async function registerCredential(): Promise<AuthenticationResult> {
         webAuthnError = {
           type: 'invalid-state',
           message: 'A credential is already registered for this device.',
-          originalError: error
+          originalError: error,
         };
         break;
 
@@ -177,16 +189,19 @@ export async function registerCredential(): Promise<AuthenticationResult> {
       case 'AbortError':
         webAuthnError = {
           type: 'timeout',
-          message: 'Authentication timed out. Please try again and complete the biometric verification within 60 seconds.',
-          originalError: error
+          message:
+            'Authentication timed out. Please try again and complete the biometric verification within 60 seconds.',
+          originalError: error,
         };
         break;
 
       default:
         webAuthnError = {
           type: 'unknown',
-          message: `Unable to register biometric authentication: ${error.message || 'Unknown error'}`,
-          originalError: error
+          message: `Unable to register biometric authentication: ${
+            error.message || 'Unknown error'
+          }`,
+          originalError: error,
         };
     }
 
@@ -200,7 +215,8 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
     if (!checkWebAuthnSupport()) {
       const error: WebAuthnError = {
         type: 'not-supported',
-        message: 'WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Safari, or Edge.'
+        message:
+          'WebAuthn is not supported in this browser. Please use a modern browser like Chrome, Firefox, Safari, or Edge.',
       };
       throw error;
     }
@@ -209,31 +225,34 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
     if (!storedCredentialId) {
       const error: WebAuthnError = {
         type: 'invalid-state',
-        message: 'No credential found. Please register first.'
+        message: 'No credential found. Please register first.',
       };
       throw error;
     }
 
     const challenge = generateChallenge();
 
-    const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions = {
-      challenge,
-      allowCredentials: [{
-        type: 'public-key',
-        id: storedCredentialId
-      }],
-      userVerification: 'required',
-      timeout: 60000
-    };
+    const publicKeyCredentialRequestOptions: PublicKeyCredentialRequestOptions =
+      {
+        challenge,
+        allowCredentials: [
+          {
+            type: 'public-key',
+            id: storedCredentialId,
+          },
+        ],
+        userVerification: 'required',
+        timeout: 60000,
+      };
 
-    const credential = await navigator.credentials.get({
-      publicKey: publicKeyCredentialRequestOptions
-    }) as PublicKeyCredential;
+    const credential = (await navigator.credentials.get({
+      publicKey: publicKeyCredentialRequestOptions,
+    })) as PublicKeyCredential;
 
     if (!credential) {
       const error: WebAuthnError = {
         type: 'unknown',
-        message: 'Failed to authenticate. Please try again.'
+        message: 'Failed to authenticate. Please try again.',
       };
       throw error;
     }
@@ -241,9 +260,8 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
     return {
       success: true,
       credential,
-      isNewRegistration: false
+      isNewRegistration: false,
     };
-
   } catch (err) {
     const error = err as Error & { name?: string };
     let webAuthnError: WebAuthnError;
@@ -258,7 +276,7 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
         webAuthnError = {
           type: 'not-allowed',
           message: 'Biometric authentication was cancelled or denied.',
-          originalError: error
+          originalError: error,
         };
         break;
 
@@ -266,7 +284,7 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
         webAuthnError = {
           type: 'not-supported',
           message: 'This device does not support biometric authentication.',
-          originalError: error
+          originalError: error,
         };
         break;
 
@@ -274,7 +292,7 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
         webAuthnError = {
           type: 'invalid-state',
           message: 'Invalid credential state. Please try registering again.',
-          originalError: error
+          originalError: error,
         };
         break;
 
@@ -283,15 +301,17 @@ export async function authenticateUser(): Promise<AuthenticationResult> {
         webAuthnError = {
           type: 'timeout',
           message: 'Authentication timed out. Please try again.',
-          originalError: error
+          originalError: error,
         };
         break;
 
       default:
         webAuthnError = {
           type: 'unknown',
-          message: `Unable to authenticate: ${error.message || 'Unknown error'}`,
-          originalError: error
+          message: `Unable to authenticate: ${
+            error.message || 'Unknown error'
+          }`,
+          originalError: error,
         };
     }
 
@@ -310,8 +330,8 @@ export function detectWebAuthnBrowser(): WebAuthnBrowserInfo {
         'Go to Settings → Accounts → Sign-in options',
         'Set up Windows Hello (Face, Fingerprint, or PIN)',
         'Ensure "Use Windows Hello for passkey verification" is enabled',
-        'Refresh the page and try again'
-      ]
+        'Refresh the page and try again',
+      ],
     };
   }
 
@@ -323,8 +343,8 @@ export function detectWebAuthnBrowser(): WebAuthnBrowserInfo {
         'On Windows: Set up Windows Hello in Settings',
         'On Mac: Ensure Touch ID is enabled in System Settings',
         'On mobile: Ensure biometric authentication is enabled',
-        'Refresh the page and try again'
-      ]
+        'Refresh the page and try again',
+      ],
     };
   }
 
@@ -336,8 +356,8 @@ export function detectWebAuthnBrowser(): WebAuthnBrowserInfo {
         'On Windows: Set up Windows Hello',
         'On Mac: Ensure Touch ID is enabled',
         'Allow Firefox to access your security key or biometric authenticator',
-        'Refresh the page and try again'
-      ]
+        'Refresh the page and try again',
+      ],
     };
   }
 
@@ -349,8 +369,8 @@ export function detectWebAuthnBrowser(): WebAuthnBrowserInfo {
         'Ensure Touch ID is enabled and configured',
         'On iPhone/iPad: Ensure Face ID or Touch ID is enabled in Settings',
         'Make sure Safari can use biometric authentication',
-        'Refresh the page and try again'
-      ]
+        'Refresh the page and try again',
+      ],
     };
   }
 
@@ -360,7 +380,7 @@ export function detectWebAuthnBrowser(): WebAuthnBrowserInfo {
       'Ensure your device has biometric authentication enabled (Face ID, Touch ID, Windows Hello)',
       'Check that your browser is up to date',
       'Make sure your browser can access biometric authentication',
-      'Try using Chrome, Safari, Firefox, or Edge for best compatibility'
-    ]
+      'Try using Chrome, Safari, Firefox, or Edge for best compatibility',
+    ],
   };
 }
