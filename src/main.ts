@@ -1,5 +1,10 @@
 import './style.css';
-import { requestCameraAccess, stopCamera, detectBrowser, type CameraError } from './camera';
+import {
+  requestCameraAccess,
+  stopCamera,
+  detectBrowser,
+  type CameraError,
+} from './camera';
 import {
   registerCredential,
   authenticateUser,
@@ -7,7 +12,7 @@ import {
   detectWebAuthnBrowser,
   checkWebAuthnSupport,
   type WebAuthnError,
-  type AuthenticationResult
+  type AuthenticationResult,
 } from './webauthn';
 
 // Create the UI
@@ -37,11 +42,15 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 
 // Get DOM elements
 const video = document.querySelector<HTMLVideoElement>('#video')!;
-const toggleButton = document.querySelector<HTMLButtonElement>('#toggle-camera')!;
-const webauthnButton = document.querySelector<HTMLButtonElement>('#webauthn-button')!;
-const statusMessage = document.querySelector<HTMLDivElement>('#status-message')!;
+const toggleButton =
+  document.querySelector<HTMLButtonElement>('#toggle-camera')!;
+const webauthnButton =
+  document.querySelector<HTMLButtonElement>('#webauthn-button')!;
+const statusMessage =
+  document.querySelector<HTMLDivElement>('#status-message')!;
 const errorMessage = document.querySelector<HTMLDivElement>('#error-message')!;
-const helpInstructions = document.querySelector<HTMLDivElement>('#help-instructions')!;
+const helpInstructions =
+  document.querySelector<HTMLDivElement>('#help-instructions')!;
 
 let isCameraActive = false;
 let isAuthenticating = false;
@@ -55,7 +64,10 @@ function hideMessages(): void {
 }
 
 // Show status message (success/info)
-function showStatusMessage(message: string, type: 'success' | 'info' = 'success'): void {
+function showStatusMessage(
+  message: string,
+  type: 'success' | 'info' = 'success'
+): void {
   statusMessage.classList.remove('hidden');
   if (type === 'info') {
     statusMessage.classList.add('info');
@@ -76,9 +88,15 @@ function showError(error: CameraError | WebAuthnError): void {
     const browser = detectBrowser();
     helpInstructions.classList.remove('hidden');
     helpInstructions.innerHTML = `
-      <h3>How to enable camera access in ${browser.name === 'unknown' ? 'your browser' : browser.name.charAt(0).toUpperCase() + browser.name.slice(1)}:</h3>
+      <h3>How to enable camera access in ${
+        browser.name === 'unknown'
+          ? 'your browser'
+          : browser.name.charAt(0).toUpperCase() + browser.name.slice(1)
+      }:</h3>
       <ol>
-        ${browser.instructions.map(instruction => `<li>${instruction}</li>`).join('')}
+        ${browser.instructions
+          .map(instruction => `<li>${instruction}</li>`)
+          .join('')}
       </ol>
     `;
   } else if (error.type === 'not-allowed' || error.type === 'not-supported') {
@@ -86,9 +104,15 @@ function showError(error: CameraError | WebAuthnError): void {
     const browser = detectWebAuthnBrowser();
     helpInstructions.classList.remove('hidden');
     helpInstructions.innerHTML = `
-      <h3>How to enable biometric authentication in ${browser.name === 'unknown' ? 'your browser' : browser.name.charAt(0).toUpperCase() + browser.name.slice(1)}:</h3>
+      <h3>How to enable biometric authentication in ${
+        browser.name === 'unknown'
+          ? 'your browser'
+          : browser.name.charAt(0).toUpperCase() + browser.name.slice(1)
+      }:</h3>
       <ol>
-        ${browser.instructions.map(instruction => `<li>${instruction}</li>`).join('')}
+        ${browser.instructions
+          .map(instruction => `<li>${instruction}</li>`)
+          .join('')}
       </ol>
     `;
   }
@@ -109,7 +133,6 @@ async function startCamera(): Promise<void> {
     toggleButton.disabled = false;
     toggleButton.classList.add('active');
     video.classList.add('active');
-
   } catch (err) {
     const error = err as CameraError;
     showError(error);
@@ -155,7 +178,8 @@ async function handleWebAuthnAuthentication(): Promise<void> {
     if (!checkWebAuthnSupport()) {
       const error: WebAuthnError = {
         type: 'not-supported',
-        message: 'Your browser does not support biometric authentication. Please use a modern browser like Chrome, Safari, Firefox, or Edge.'
+        message:
+          'Your browser does not support biometric authentication. Please use a modern browser like Chrome, Safari, Firefox, or Edge.',
       };
       throw error;
     }
@@ -175,7 +199,9 @@ async function handleWebAuthnAuthentication(): Promise<void> {
         video.classList.add('active');
         cameraStarted = true;
       } catch (cameraError) {
-        console.warn('Camera access denied, continuing authentication without camera');
+        console.warn(
+          'Camera access denied, continuing authentication without camera'
+        );
       }
 
       // Perform authentication
@@ -192,9 +218,10 @@ async function handleWebAuthnAuthentication(): Promise<void> {
         isAuthenticated = true;
         webauthnButton.textContent = 'Authenticated ✓';
         webauthnButton.classList.add('authenticated');
-        showStatusMessage('Authentication successful! You have been verified with biometrics.');
+        showStatusMessage(
+          'Authentication successful! You have been verified with biometrics.'
+        );
       }
-
     } else {
       // Registration flow
       webauthnButton.textContent = 'Registering...';
@@ -207,7 +234,9 @@ async function handleWebAuthnAuthentication(): Promise<void> {
         video.classList.add('active');
         cameraStarted = true;
       } catch (cameraError) {
-        console.warn('Camera access denied, continuing registration without camera');
+        console.warn(
+          'Camera access denied, continuing registration without camera'
+        );
       }
 
       // Perform registration
@@ -222,10 +251,12 @@ async function handleWebAuthnAuthentication(): Promise<void> {
 
       if (result.success) {
         webauthnButton.textContent = 'Authenticate with FaceID';
-        showStatusMessage('Biometric credential registered successfully! Click "Authenticate with FaceID" again to verify.', 'info');
+        showStatusMessage(
+          'Biometric credential registered successfully! Click "Authenticate with FaceID" again to verify.',
+          'info'
+        );
       }
     }
-
   } catch (err) {
     const error = err as WebAuthnError;
     showError(error);
@@ -242,6 +273,8 @@ async function handleWebAuthnAuthentication(): Promise<void> {
   } finally {
     isAuthenticating = false;
     webauthnButton.disabled = false;
+
+    console.log(isAuthenticated);
   }
 }
 
