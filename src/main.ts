@@ -165,7 +165,13 @@ toggleButton.addEventListener('click', () => {
   }
 });
 
-// Handle WebAuthn authentication
+// ============================================================
+// FIXED: Handle WebAuthn authentication
+// The key fix is to call WebAuthn IMMEDIATELY on click,
+// before any async operations like camera access.
+// Safari/iOS requires WebAuthn to be called synchronously
+// within the user gesture (click event).
+// ============================================================
 async function handleWebAuthnAuthentication(): Promise<void> {
   if (isAuthenticating) return;
 
@@ -188,32 +194,16 @@ async function handleWebAuthnAuthentication(): Promise<void> {
     const hasCredential = getStoredCredentialId() !== null;
 
     if (hasCredential) {
-      // Authentication flow
+      // ============================================================
+      // AUTHENTICATION FLOW
+      // IMPORTANT: Call WebAuthn FIRST, before camera access!
+      // ============================================================
       webauthnButton.textContent = 'Authenticating...';
 
-      // Request camera access for FaceID preview (optional - continue if denied)
-      let cameraStarted = false;
-      try {
-        const stream = await requestCameraAccess();
-        video.srcObject = stream;
-        video.classList.add('active');
-        cameraStarted = true;
-      } catch (cameraError) {
-        console.warn(
-          'Camera access denied, continuing authentication without camera'
-        );
-      }
-
-      // Perform authentication
+      // Perform authentication IMMEDIATELY - no async before this!
       const result: AuthenticationResult = await authenticateUser();
 
-      // Stop camera after authentication
-      if (cameraStarted) {
-        stopCamera();
-        video.srcObject = null;
-        video.classList.remove('active');
-      }
-
+      // Only try camera AFTER WebAuthn succeeds
       if (result.success) {
         isAuthenticated = true;
         webauthnButton.textContent = 'Authenticated ✓';
@@ -221,40 +211,56 @@ async function handleWebAuthnAuthentication(): Promise<void> {
         showStatusMessage(
           'Authentication successful! You have been verified with biometrics.'
         );
+
+        // Now we can optionally show camera (after WebAuthn)
+        try {
+          const stream = await requestCameraAccess();
+          video.srcObject = stream;
+          video.classList.add('active');
+          
+          // Auto-stop camera after 3 seconds
+          setTimeout(() => {
+            stopCamera();
+            video.srcObject = null;
+            video.classList.remove('active');
+          }, 3000);
+        } catch (cameraError) {
+          console.warn('Camera access denied after authentication');
+        }
       }
     } else {
-      // Registration flow
+      // ============================================================
+      // REGISTRATION FLOW
+      // IMPORTANT: Call WebAuthn FIRST, before camera access!
+      // ============================================================
       webauthnButton.textContent = 'Registering...';
 
-      // Request camera access for FaceID preview (optional - continue if denied)
-      let cameraStarted = false;
-      try {
-        const stream = await requestCameraAccess();
-        video.srcObject = stream;
-        video.classList.add('active');
-        cameraStarted = true;
-      } catch (cameraError) {
-        console.warn(
-          'Camera access denied, continuing registration without camera'
-        );
-      }
-
-      // Perform registration
+      // Perform registration IMMEDIATELY - no async before this!
       const result: AuthenticationResult = await registerCredential();
 
-      // Stop camera after registration
-      if (cameraStarted) {
-        stopCamera();
-        video.srcObject = null;
-        video.classList.remove('active');
-      }
-
+      // Only try camera AFTER WebAuthn succeeds
       if (result.success) {
         webauthnButton.textContent = 'Authenticate with FaceID';
         showStatusMessage(
           'Biometric credential registered successfully! Click "Authenticate with FaceID" again to verify.',
           'info'
         );
+
+        // Now we can optionally show camera (after WebAuthn)
+        try {
+          const stream = await requestCameraAccess();
+          video.srcObject = stream;
+          video.classList.add('active');
+          
+          // Auto-stop camera after 3 seconds
+          setTimeout(() => {
+            stopCamera();
+            video.srcObject = null;
+            video.classList.remove('active');
+          }, 3000);
+        } catch (cameraError) {
+          console.warn('Camera access denied after registration');
+        }
       }
     }
   } catch (err) {
