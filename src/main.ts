@@ -18,7 +18,7 @@ import {
 // Create the UI
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="container">
-    <h1>Camera Access App</h1>
+    <h1>Camera Access App 📸</h1>
     <p class="subtitle">Test camera and biometric authentication</p>
 
     <div class="video-container">
