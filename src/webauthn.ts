@@ -106,7 +106,7 @@ export async function registerCredential(): Promise<AuthenticationResult> {
       {
         challenge,
         rp: {
-          name: 'Camera Access App',
+          name: 'Camera Access App 📸',
           id:
             window.location.hostname === 'localhost'
               ? 'localhost'
